@@ -26,7 +26,7 @@ export class WatchlistController {
   }
 
   @ApiOperation({ summary: 'Ambil semua watchlist user' })
-  @ApiQuery({ name: 'user_id', required: true, type: String })
+  @ApiQuery({ name: 'userId', required: true, type: String })
   @Get()
   findAll(@Query() query: QueryWatchlistDto) {
     return this.watchlistService.findAllByUser(query.userId);
