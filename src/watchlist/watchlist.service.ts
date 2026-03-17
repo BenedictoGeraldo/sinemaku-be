@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -11,10 +12,10 @@ import { UpdateWatchlistDto } from './dto/update-watchlist.dto';
 export class WatchlistService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(dto: CreateWatchlistDto) {
+  async create(userId: string, dto: CreateWatchlistDto) {
     const existing = await this.prisma.watchlist.findFirst({
       where: {
-        userId: dto.userId,
+        userId,
         movieId: dto.movieId,
       },
     });
@@ -25,7 +26,7 @@ export class WatchlistService {
 
     return this.prisma.watchlist.create({
       data: {
-        userId: dto.userId,
+        userId,
         movieId: dto.movieId,
         title: dto.title,
         poster: dto.poster,
@@ -41,7 +42,7 @@ export class WatchlistService {
     });
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, userId: string) {
     const item = await this.prisma.watchlist.findUnique({
       where: { id },
     });
@@ -50,11 +51,15 @@ export class WatchlistService {
       throw new NotFoundException('Watchlist item tidak ditemukan');
     }
 
+    if (item.userId !== userId) {
+      throw new ForbiddenException('Tidak memiliki akses ke item ini');
+    }
+
     return item;
   }
 
-  async update(id: string, dto: UpdateWatchlistDto) {
-    await this.findOne(id);
+  async update(id: string, userId: string, dto: UpdateWatchlistDto) {
+    await this.findOne(id, userId);
 
     return this.prisma.watchlist.update({
       where: { id },
@@ -62,8 +67,8 @@ export class WatchlistService {
     });
   }
 
-  async remove(id: string) {
-    await this.findOne(id);
+  async remove(id: string, userId: string) {
+    await this.findOne(id, userId);
 
     return this.prisma.watchlist.delete({
       where: { id },

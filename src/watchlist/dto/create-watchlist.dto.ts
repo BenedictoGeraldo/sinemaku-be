@@ -2,17 +2,12 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateWatchlistDto {
-  @ApiProperty({ example: 'user-dev-1' })
-  @IsString()
-  @IsNotEmpty()
-  userId!: string;
-
-  @ApiProperty({ example: 'tt0111161' })
+  @ApiProperty({ example: '550' })
   @IsString()
   @IsNotEmpty()
   movieId!: string;
 
-  @ApiProperty({ example: 'The Shawshank Redemption' })
+  @ApiProperty({ example: 'Fight Club' })
   @IsString()
   @IsNotEmpty()
   title!: string;
