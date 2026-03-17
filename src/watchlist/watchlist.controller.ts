@@ -4,52 +4,73 @@ import {
   Delete,
   Get,
   Param,
-  Post,
   Patch,
-  Query,
+  Post,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { Request } from 'express';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+} from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 import { CreateWatchlistDto } from './dto/create-watchlist.dto';
-import { WatchlistService } from './watchlist.service';
 import { UpdateWatchlistDto } from './dto/update-watchlist.dto';
-import { QueryWatchlistDto } from './dto/query-watchlist.dto';
+import { WatchlistService } from './watchlist.service';
+
+type JwtUser = {
+  userId: string;
+  email: string;
+};
+
+type AuthenticatedRequest = Request & {
+  user: JwtUser;
+};
 
 @ApiTags('Watchlist')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('watchlist')
 export class WatchlistController {
   constructor(private readonly watchlistService: WatchlistService) {}
 
   @ApiOperation({ summary: 'Tambah movie ke watchlist' })
   @Post()
-  create(@Body() dto: CreateWatchlistDto) {
-    return this.watchlistService.create(dto);
+  create(@Body() dto: CreateWatchlistDto, @Req() req: AuthenticatedRequest) {
+    return this.watchlistService.create(req.user.userId, dto);
   }
 
-  @ApiOperation({ summary: 'Ambil semua watchlist user' })
-  @ApiQuery({ name: 'userId', required: true, type: String })
+  @ApiOperation({ summary: 'Ambil semua watchlist user login' })
   @Get()
-  findAll(@Query() query: QueryWatchlistDto) {
-    return this.watchlistService.findAllByUser(query.userId);
+  findAll(@Req() req: AuthenticatedRequest) {
+    return this.watchlistService.findAllByUser(req.user.userId);
   }
 
   @ApiOperation({ summary: 'Ambil detail item watchlist' })
   @ApiParam({ name: 'id', type: String })
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.watchlistService.findOne(id);
+  findOne(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
+    return this.watchlistService.findOne(id, req.user.userId);
   }
 
   @ApiOperation({ summary: 'Update item watchlist' })
   @ApiParam({ name: 'id', type: String })
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateWatchlistDto) {
-    return this.watchlistService.update(id, dto);
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateWatchlistDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.watchlistService.update(id, req.user.userId, dto);
   }
 
   @ApiOperation({ summary: 'Hapus item watchlist' })
   @ApiParam({ name: 'id', type: String })
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.watchlistService.remove(id);
+  remove(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
+    return this.watchlistService.remove(id, req.user.userId);
   }
 }
